@@ -1,18 +1,3 @@
-def match_and_handle(screen_gray, template, threshold, on_match):
-    """
-    Find matches of template in screen_gray above threshold, call on_match(x, y) for each match.
-    """
-    result = cv2.matchTemplate(screen_gray, template, TM_METHOD)
-    loc = np.where(result >= threshold)
-    if loc[0].size > 0:
-        for pt in zip(*loc[::-1]):
-            x = pt[0] + template.shape[1] // 2
-            y = pt[1] + template.shape[0] // 2
-            on_match(x, y)
-        return True
-    return False
-# | Made by 2cz5 | https://github.com/2cz5 | Discord:2cz5 (for questions etc..)
-
 import cv2
 import numpy as np
 import pyautogui
@@ -35,6 +20,21 @@ window_index = 0
 SCREEN_CROP = (0, 0, 622, 1080)
 TM_METHOD = cv2.TM_CCOEFF_NORMED
 
+def match_and_handle(screen_gray, template, threshold, on_match):
+    """
+    Find matches of template in screen_gray above threshold, call on_match(x, y) for each match.
+    """
+    result = cv2.matchTemplate(screen_gray, template, TM_METHOD)
+    loc = np.where(result >= threshold)
+    if loc[0].size > 0:
+        for pt in zip(*loc[::-1]):
+            x = pt[0] + template.shape[1] // 2
+            y = pt[1] + template.shape[0] // 2
+            on_match(x, y)
+            break
+        return True
+    return False
+
 def load_templates():
     """Load and return all templates used by the script as a dict of grayscale images."""
     return {
@@ -45,6 +45,11 @@ def load_templates():
         "contribution": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\contribution.png", cv2.IMREAD_GRAYSCALE),
         "good": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\good.png", cv2.IMREAD_GRAYSCALE),
         "free": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\free.png", cv2.IMREAD_GRAYSCALE),
+        "idle": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\idle.png", cv2.IMREAD_GRAYSCALE),
+        "world": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\world.png", cv2.IMREAD_GRAYSCALE),
+        "conquest": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\conquest.png", cv2.IMREAD_GRAYSCALE),
+        "conquest1": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\conquest1.png", cv2.IMREAD_GRAYSCALE),
+        "conquest2": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\conquest2.png", cv2.IMREAD_GRAYSCALE),
     }
 
 def grab_screen_gray():
@@ -76,6 +81,11 @@ def monitor_marchqueue(click_delay):
 
     window_index = 0    
     while True:
+        if (window_index == 0):
+            window_index = 1
+        else:
+            window_index = 0
+
         if windows:
             try:
                 windows[window_index].activate()
@@ -84,21 +94,23 @@ def monitor_marchqueue(click_delay):
 
         time.sleep(3)
 
+        Gathering_activated = True
         #open wilderness
         delay = [1,3]
         key=["S","1"]
         SpecialClick(key,delay)        
-
         screen_gray = grab_screen_gray()
 
-        # Perform template matching for marching
-
-
-
-
+        #always click on world
+        def on_world(x, y):
+            time.sleep(3)
+            pyautogui.click(x, y)
+            pyautogui.moveTo(10,10)
+            time.sleep(3)
+            logging.info(f"Clicked on world ({x}, {y})")
+        match_and_handle(screen_gray, templates["world"], 0.9, on_world)
 
         def on_marchqueue(x, y):
-            Gathering_activated = True
             time.sleep(3)
             # additonal bread gathering
             #delay = [1.5,1.5,1.5,1.5,1.5,2.5,1.5,1.5]
@@ -106,17 +118,35 @@ def monitor_marchqueue(click_delay):
             #SpecialClick(key,delay)
 
             # bread gathering
-            SpecialClick(["I","left","left","B","F","G","1","2","E"], [1.5,1.5,1.5,1.5,1.5,2.5,1.5,1.5,1.5])
+            SpecialClick(['I','I'], [1.5,1.5])
+            pyautogui.moveTo(522,768)
+            pyautogui.dragTo(70,768,duration = 1)
+            SpecialClick(['B','F','G','1','2','E'], [1.5,1.5,2.5,1.5,1.5,1.5])
+            
             # wood gathering
-            SpecialClick(["I","left","left","O","F","G","1","2","E"], [1.5,1.5,1.5,1.5,1.5,2.5,1.5,1.5,1.5])
+            SpecialClick(['I','I'], [1.5,1.5])
+            pyautogui.moveTo(522,768)
+            pyautogui.dragTo(70,768,duration = 1)
+            SpecialClick(["O","F","G","1","2","E"], [1.5,1.5,2.5,1.5,1.5,1.5])
+            
             # stone gathering
-            SpecialClick(["I","left","left","N","F","G","1","2","E"], [1.5,1.5,1.5,1.5,1.5,2.5,1.5,1.5,1.5])
+            SpecialClick(['I','I'], [1.5,1.5])
+            pyautogui.moveTo(522,768)
+            pyautogui.dragTo(70,768,duration = 1)
+            SpecialClick(["N","F","G","1","2","E"], [1.5,1.5,2.5,1.5,1.5,1.5])
+            
             # iron gathering
-            SpecialClick(["I","left","left","L","F","G","1","2","E"], [1.5,1.5,1.5,1.5,1.5,2.5,1.5,1.5,1.5])
+            SpecialClick(['I','I'], [1.5,1.5])
+            pyautogui.moveTo(522,768)
+            pyautogui.dragTo(70,768,duration = 1)
+            SpecialClick(["L","F","G","1","2","E","s"], [1.5,1.5,2.5,1.5,1.5,1.5,1.5])
+            
             if windows[window_index].title == "wosmin":
-                SpecialClick(["I","left","left","L","F","G","6","E","s"], [1.5,1.5,1.5,1.5,1.5,2.5,1.5,1.5,3])
+                SpecialClick(['I','I'], [1.5,1.5])
+                pyautogui.moveTo(522,768)
+                pyautogui.dragTo(70,768,duration = 1)
+                SpecialClick(["L","F","G","6","E","s"], [1.5,1.5,2.5,1.5,1.5,3])
             logging.info(f"finished sending army")
-            Gathering_activated = False
         match_and_handle(screen_gray, templates["marchqueue"], 0.9, on_marchqueue)
         
         #Go to town page       
@@ -129,17 +159,41 @@ def monitor_marchqueue(click_delay):
 
         # Perform template online for cavalry inf archer
         def on_completed(x, y):
-            Gathering_activated = True
             time.sleep(3)
             pyautogui.click(x, y)
             pyautogui.moveTo(10,10)
             time.sleep(3)
             SpecialClick(["9","g","a","s","s","t","esc","s"], [3,1.5,1.5,1.5,1.5,1.5,1.5,3])
-            Gathering_activated = False
         if match_and_handle(screen_gray, templates["completed"], 0.7, on_completed):
             continue
 
-    #check for online gift here        
+        # peform template matching for idle
+        def on_idle(x, y):
+            time.sleep(3)
+            pyautogui.click(x, y)
+            pyautogui.moveTo(10,10)
+            time.sleep(3)
+            SpecialClick(["9","g","a","s","s","t","esc","s"], [3,1.5,1.5,1.5,1.5,1.5,1.5,3])
+        if match_and_handle(screen_gray, templates["idle"], 0.9, on_idle):
+            continue
+
+        # check for conquest here
+        def on_conquest(x, y):
+            time.sleep(3)
+            pyautogui.click(x, y)
+            pyautogui.moveTo(10,10)
+            time.sleep(3)
+            # click on conquest 1
+            screen_gray2 = grab_screen_gray()
+            if match_and_handle(screen_gray2, templates["conquest1"], 0.9, lambda x2, y2: (pyautogui.click(x2, y2), pyautogui.moveTo(10,10), logging.info(f"Clicked on conquest1 ({x2}, {y2})"), time.sleep(3))):
+                screen_gray2 = grab_screen_gray()
+                match_and_handle(screen_gray2, templates["conquest2"], 0.9, lambda x2, y2: (pyautogui.click(x2, y2), pyautogui.moveTo(10,10), logging.info(f"Clicked on conquest2 ({x2}, {y2})"), time.sleep(3)))
+                SpecialClick(["s","esc"], [1,1])
+            logging.info(f"Clicked on conquest ({x}, {y})")
+        if match_and_handle(screen_gray, templates["conquest"], 0.95, on_conquest):
+            continue
+
+        #check for online gift here
         delay = [0.5,2]
         key =["S","5"]
         SpecialClick(key,delay) 
@@ -163,47 +217,47 @@ def monitor_marchqueue(click_delay):
         if match_and_handle(screen_gray, templates["online"], 0.85, on_online):
             continue
 
-        # Perform template matching for hero advance
-        result = cv2.matchTemplate(screen_gray, templates["heroadvance"], method)
-        # Get the location of matches above the specified threshold
-        loc = np.where(result >= 0.75)
-        # Click on the matched locations
-        if loc[0].size > 0:
-            Gathering_activated = True
-            for pt in zip(*loc[::-1]):
-                # Calculate the center of the matched template
-                x, y = pt[0] + templates["heroadvance"].shape[1] // 2, pt[1] + templates["heroadvance"].shape[0] // 2
-                # Click on the center of the matched template
-                pyautogui.click(x, y)
-                pyautogui.moveTo(10,10)
-                logging.info(f"Clicked on advance hero ({x}, {y})")
-                time.sleep(3)
-                break
+        # # Perform template matching for hero advance
+        # result = cv2.matchTemplate(screen_gray, templates["heroadvance"], method)
+        # # Get the location of matches above the specified threshold
+        # loc = np.where(result >= 0.75)
+        # # Click on the matched locations
+        # if loc[0].size > 0:
+        #     Gathering_activated = True
+        #     for pt in zip(*loc[::-1]):
+        #         # Calculate the center of the matched template
+        #         x, y = pt[0] + templates["heroadvance"].shape[1] // 2, pt[1] + templates["heroadvance"].shape[0] // 2
+        #         # Click on the center of the matched template
+        #         pyautogui.click(x, y)
+        #         pyautogui.moveTo(10,10)
+        #         logging.info(f"Clicked on advance hero ({x}, {y})")
+        #         time.sleep(3)
+        #         break
             
-            # recurit hero
-            screen_gray = grab_screen_gray()
-            result = cv2.matchTemplate(screen_gray, templates["free"], method)
-            loc = np.where(result >= 0.85)
-            # Click on the matched locations
-            if loc[0].size > 0:
-                time.sleep(3)
-                for pt in zip(*loc[::-1]):
-                    # Calculate the center of the matched template
-                    x, y = pt[0] + templates["free"].shape[1], pt[1] + templates["free"].shape[0]
-                    # Click on the center of the matched template
-                    pyautogui.click(x, y)
-                    pyautogui.moveTo(10,10)
-                    time.sleep(3)
-                    break
+        #     # recurit hero
+        #     screen_gray = grab_screen_gray()
+        #     result = cv2.matchTemplate(screen_gray, templates["free"], method)
+        #     loc = np.where(result >= 0.85)
+        #     # Click on the matched locations
+        #     if loc[0].size > 0:
+        #         time.sleep(3)
+        #         for pt in zip(*loc[::-1]):
+        #             # Calculate the center of the matched template
+        #             x, y = pt[0] + templates["free"].shape[1], pt[1] + templates["free"].shape[0]
+        #             # Click on the center of the matched template
+        #             pyautogui.click(x, y)
+        #             pyautogui.moveTo(10,10)
+        #             time.sleep(3)
+        #             break
                 
-                delay = [3,3,3,3]
-                key = ["s","esc","esc","s"]
-                SpecialClick(key,delay)        
+        #         delay = [3,3,3,3]
+        #         key = ["s","esc","esc","s"]
+        #         SpecialClick(key,delay)        
                     
-                logging.info(f"free recuilt ({x}, {y})")
-                time.sleep(3)
-            Gathering_activated = False
-            continue
+        #         logging.info(f"free recuilt ({x}, {y})")
+        #         time.sleep(3)
+        #     Gathering_activated = False
+        #     continue
         def on_heroadvance(x, y):
             Gathering_activated = True
             pyautogui.click(x, y)
@@ -224,52 +278,51 @@ def monitor_marchqueue(click_delay):
         if match_and_handle(screen_gray, templates["heroadvance"], 0.75, on_heroadvance):
             continue
         
-        # Perform template matching for contribution
-        result = cv2.matchTemplate(screen_gray, templates["contribution"], method)
-        # Get the location of matches above the specified threshold
-        loc = np.where(result >= 0.85)
-        # Click on the matched locations
-        if loc[0].size > 0:
-            Gathering_activated = True
-            time.sleep(3)
-            for pt in zip(*loc[::-1]):
-                # Calculate the center of the matched template
-                x, y = pt[0] + templates["contribution"].shape[1]//2, pt[1] + templates["contribution"].shape[0] // 2
+        # # Perform template matching for contribution
+        # result = cv2.matchTemplate(screen_gray, templates["contribution"], method)
+        # # Get the location of matches above the specified threshold
+        # loc = np.where(result >= 0.85)
+        # # Click on the matched locations
+        # if loc[0].size > 0:
+        #     Gathering_activated = True
+        #     time.sleep(3)
+        #     for pt in zip(*loc[::-1]):
+        #         # Calculate the center of the matched template
+        #         x, y = pt[0] + templates["contribution"].shape[1]//2, pt[1] + templates["contribution"].shape[0] // 2
 
-                # Click on the center of the matched template
-                pyautogui.click(x, y)
-                pyautogui.moveTo(10,10)
-                logging.info(f"contribution  ({x}, {y})")
-                time.sleep(3)
-                break
-            # recurit hero
-            delay = [3,3,3,3]
-            key = ["e","n","esc","n"]
-            SpecialClick(key,delay)        
+        #         # Click on the center of the matched template
+        #         pyautogui.click(x, y)
+        #         pyautogui.moveTo(10,10)
+        #         logging.info(f"contribution  ({x}, {y})")
+        #         time.sleep(3)
+        #         break
+        #     # recurit hero
+        #     delay = [3,3,3,3]
+        #     key = ["e","n","esc","n"]
+        #     SpecialClick(key,delay)        
 
-            screen_gray = grab_screen_gray()
-            result = cv2.matchTemplate(screen_gray, templates["good"], method)
-            loc = np.where(result >= 0.85)
-            # Click on the matched locations
-            if loc[0].size > 0:
-                time.sleep(3)
-                for pt in zip(*loc[::-1]):
-                    # Calculate the center of the matched template
-                    x, y = pt[0] + templates["good"].shape[1], pt[1] + templates["good"].shape[0]
-                    # Click on the center of the matched template
-                    pyautogui.click(x, y)
-                    pyautogui.moveTo(10,10)
-                    time.sleep(3)
-                    delay = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,3,3,3]
-                    key = ["h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","esc","esc","esc","s"]
-                    SpecialClick(key,delay)        
-                    logging.info(f"Clicked on good ({x}, {y}) 25 time")
-                    time.sleep(3)
-                    break
-            Gathering_activated = False
-            continue
+        #     screen_gray = grab_screen_gray()
+        #     result = cv2.matchTemplate(screen_gray, templates["good"], method)
+        #     loc = np.where(result >= 0.85)
+        #     # Click on the matched locations
+        #     if loc[0].size > 0:
+        #         time.sleep(3)
+        #         for pt in zip(*loc[::-1]):
+        #             # Calculate the center of the matched template
+        #             x, y = pt[0] + templates["good"].shape[1], pt[1] + templates["good"].shape[0]
+        #             # Click on the center of the matched template
+        #             pyautogui.click(x, y)
+        #             pyautogui.moveTo(10,10)
+        #             time.sleep(3)
+        #             delay = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,3,3,3]
+        #             key = ["h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","esc","esc","esc","s"]
+        #             SpecialClick(key,delay)        
+        #             logging.info(f"Clicked on good ({x}, {y}) 25 time")
+        #             time.sleep(3)
+        #             break
+        #     Gathering_activated = False
+        #     continue
         def on_contribution(x, y):
-            Gathering_activated = True
             time.sleep(3)
             pyautogui.click(x, y)
             pyautogui.moveTo(10,10)
@@ -294,10 +347,6 @@ def monitor_marchqueue(click_delay):
             break
 
         Gathering_activated = False    
-        if (window_index == 0):
-            window_index = 1
-        else:
-            window_index = 0
         time.sleep(30)        
 
 # Function to search for images on the screen and click on them if found
@@ -348,8 +397,8 @@ def SpecialClick(keypress,delay):
             windows[window_index].activate()
         except Exception:
             print("Ok")
-        
-        time.sleep(3)
+        time.sleep(1)
+  
         for key,delayclick in zip(keypress,delay):
             time.sleep(delayclick)
             pyautogui.press(key)
