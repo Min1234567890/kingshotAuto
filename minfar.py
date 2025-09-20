@@ -20,16 +20,40 @@ window_index = 0
 SCREEN_CROP = (0, 0, 622, 1080)
 TM_METHOD = cv2.TM_CCOEFF_NORMED
 
-def match_and_handle(screen_gray, template, threshold, on_match):
+def match_and_handle(screen_gray, template, threshold, on_match, region=None):
     """
     Find matches of template in screen_gray above threshold, call on_match(x, y) for each match.
+    If region is provided, limit the search to that rectangle within screen_gray.
+
+    region: Optional tuple (x1, y1, x2, y2) specifying inclusive-exclusive bounds in the cropped screen coordinates.
     """
-    result = cv2.matchTemplate(screen_gray, template, TM_METHOD)
+    # Apply region of interest if provided
+    x_offset = 0
+    y_offset = 0
+    search_area = screen_gray
+    if region is not None:
+        x1, y1, x2, y2 = region
+        # Ensure bounds are within the image dimensions
+        x1 = max(0, x1)
+        y1 = max(0, y1)
+        x2 = min(screen_gray.shape[1], x2)
+        y2 = min(screen_gray.shape[0], y2)
+        if x2 > x1 and y2 > y1:
+            search_area = screen_gray[y1:y2, x1:x2]
+            x_offset = x1
+            y_offset = y1
+        else:
+            # Invalid region; fallback to full image
+            search_area = screen_gray
+            x_offset = 0
+            y_offset = 0
+
+    result = cv2.matchTemplate(search_area, template, TM_METHOD)
     loc = np.where(result >= threshold)
     if loc[0].size > 0:
         for pt in zip(*loc[::-1]):
-            x = pt[0] + template.shape[1] // 2
-            y = pt[1] + template.shape[0] // 2
+            x = x_offset + pt[0] + template.shape[1] // 2
+            y = y_offset + pt[1] + template.shape[0] // 2
             on_match(x, y)
             break
         return True
@@ -50,6 +74,9 @@ def load_templates():
         "conquest": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\conquest.png", cv2.IMREAD_GRAYSCALE),
         "conquest1": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\conquest1.png", cv2.IMREAD_GRAYSCALE),
         "conquest2": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\conquest2.png", cv2.IMREAD_GRAYSCALE),
+        "help": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\help.png", cv2.IMREAD_GRAYSCALE),
+        "back": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\back.png", cv2.IMREAD_GRAYSCALE),
+        "fountain": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\fountain.png", cv2.IMREAD_GRAYSCALE),
     }
 
 def grab_screen_gray():
@@ -81,11 +108,6 @@ def monitor_marchqueue(click_delay):
 
     window_index = 0    
     while True:
-        if (window_index == 0):
-            window_index = 1
-        else:
-            window_index = 0
-
         if windows:
             try:
                 windows[window_index].activate()
@@ -103,12 +125,31 @@ def monitor_marchqueue(click_delay):
 
         #always click on world
         def on_world(x, y):
-            time.sleep(3)
             pyautogui.click(x, y)
-            pyautogui.moveTo(10,10)
             time.sleep(3)
+            pyautogui.moveTo(10,10)
             logging.info(f"Clicked on world ({x}, {y})")
-        match_and_handle(screen_gray, templates["world"], 0.9, on_world)
+        if match_and_handle(screen_gray, templates["world"], 0.9, on_world):
+            continue
+
+        #always click on help
+        def on_help(x, y):
+            pyautogui.click(x, y)
+            time.sleep(3)
+            pyautogui.moveTo(10,10)
+            logging.info(f"Clicked on help ({x}, {y})")
+        if match_and_handle(screen_gray, templates["help"], 0.8, on_help):
+            continue    
+
+        #always click on back
+        def on_back(x, y):
+            pyautogui.click(x, y)
+            time.sleep(3)
+            pyautogui.moveTo(10,10)
+            logging.info(f"Clicked on back ({x}, {y})")
+        if match_and_handle(screen_gray, templates["back"], 0.7, on_back, region=(0, 0, 105, 117)):
+            continue    
+
 
         def on_marchqueue(x, y):
             time.sleep(3)
@@ -159,22 +200,24 @@ def monitor_marchqueue(click_delay):
 
         # Perform template online for cavalry inf archer
         def on_completed(x, y):
+            logging.info(f"Clicked on completed ({x}, {y})")
             time.sleep(3)
             pyautogui.click(x, y)
             pyautogui.moveTo(10,10)
             time.sleep(3)
             SpecialClick(["9","g","a","s","s","t","esc","s"], [3,1.5,1.5,1.5,1.5,1.5,1.5,3])
-        if match_and_handle(screen_gray, templates["completed"], 0.7, on_completed):
+        if match_and_handle(screen_gray, templates["completed"], 0.8, on_completed):
             continue
 
         # peform template matching for idle
         def on_idle(x, y):
+            logging.info(f"Clicked on idle ({x}, {y})")
             time.sleep(3)
             pyautogui.click(x, y)
             pyautogui.moveTo(10,10)
             time.sleep(3)
             SpecialClick(["9","g","a","s","s","t","esc","s"], [3,1.5,1.5,1.5,1.5,1.5,1.5,3])
-        if match_and_handle(screen_gray, templates["idle"], 0.9, on_idle):
+        if match_and_handle(screen_gray, templates["idle"], 0.8, on_idle, region=(67, 459, 351, 646)):
             continue
 
         # check for conquest here
@@ -189,8 +232,10 @@ def monitor_marchqueue(click_delay):
                 screen_gray2 = grab_screen_gray()
                 match_and_handle(screen_gray2, templates["conquest2"], 0.9, lambda x2, y2: (pyautogui.click(x2, y2), pyautogui.moveTo(10,10), logging.info(f"Clicked on conquest2 ({x2}, {y2})"), time.sleep(3)))
                 SpecialClick(["s","esc"], [1,1])
+                time.sleep(3)
             logging.info(f"Clicked on conquest ({x}, {y})")
-        if match_and_handle(screen_gray, templates["conquest"], 0.95, on_conquest):
+        # Limit conquest match to rectangle (58,990)-(104,1030)
+        if match_and_handle(screen_gray, templates["conquest"], 0.7, on_conquest, region=(40, 967, 113, 1023)):
             continue
 
         #check for online gift here
@@ -217,47 +262,18 @@ def monitor_marchqueue(click_delay):
         if match_and_handle(screen_gray, templates["online"], 0.85, on_online):
             continue
 
-        # # Perform template matching for hero advance
-        # result = cv2.matchTemplate(screen_gray, templates["heroadvance"], method)
-        # # Get the location of matches above the specified threshold
-        # loc = np.where(result >= 0.75)
-        # # Click on the matched locations
-        # if loc[0].size > 0:
-        #     Gathering_activated = True
-        #     for pt in zip(*loc[::-1]):
-        #         # Calculate the center of the matched template
-        #         x, y = pt[0] + templates["heroadvance"].shape[1] // 2, pt[1] + templates["heroadvance"].shape[0] // 2
-        #         # Click on the center of the matched template
-        #         pyautogui.click(x, y)
-        #         pyautogui.moveTo(10,10)
-        #         logging.info(f"Clicked on advance hero ({x}, {y})")
-        #         time.sleep(3)
-        #         break
-            
-        #     # recurit hero
-        #     screen_gray = grab_screen_gray()
-        #     result = cv2.matchTemplate(screen_gray, templates["free"], method)
-        #     loc = np.where(result >= 0.85)
-        #     # Click on the matched locations
-        #     if loc[0].size > 0:
-        #         time.sleep(3)
-        #         for pt in zip(*loc[::-1]):
-        #             # Calculate the center of the matched template
-        #             x, y = pt[0] + templates["free"].shape[1], pt[1] + templates["free"].shape[0]
-        #             # Click on the center of the matched template
-        #             pyautogui.click(x, y)
-        #             pyautogui.moveTo(10,10)
-        #             time.sleep(3)
-        #             break
-                
-        #         delay = [3,3,3,3]
-        #         key = ["s","esc","esc","s"]
-        #         SpecialClick(key,delay)        
-                    
-        #         logging.info(f"free recuilt ({x}, {y})")
-        #         time.sleep(3)
-        #     Gathering_activated = False
-        #     continue
+        # Perform template fountain for online
+        def on_fountain(x, y):
+            Gathering_activated = True
+            pyautogui.click(x, y)
+            pyautogui.moveTo(10,10)
+            SpecialClick(["9","L","home"], [1,1,1])
+            logging.info(f"Clicked on fountain ({x}, {y})")
+            Gathering_activated = False
+        if match_and_handle(screen_gray, templates["fountain"], 0.8, on_fountain):
+            continue
+
+        # Perform template matching for heroadvance            
         def on_heroadvance(x, y):
             Gathering_activated = True
             pyautogui.click(x, y)
@@ -277,51 +293,8 @@ def monitor_marchqueue(click_delay):
             Gathering_activated = False
         if match_and_handle(screen_gray, templates["heroadvance"], 0.75, on_heroadvance):
             continue
-        
-        # # Perform template matching for contribution
-        # result = cv2.matchTemplate(screen_gray, templates["contribution"], method)
-        # # Get the location of matches above the specified threshold
-        # loc = np.where(result >= 0.85)
-        # # Click on the matched locations
-        # if loc[0].size > 0:
-        #     Gathering_activated = True
-        #     time.sleep(3)
-        #     for pt in zip(*loc[::-1]):
-        #         # Calculate the center of the matched template
-        #         x, y = pt[0] + templates["contribution"].shape[1]//2, pt[1] + templates["contribution"].shape[0] // 2
-
-        #         # Click on the center of the matched template
-        #         pyautogui.click(x, y)
-        #         pyautogui.moveTo(10,10)
-        #         logging.info(f"contribution  ({x}, {y})")
-        #         time.sleep(3)
-        #         break
-        #     # recurit hero
-        #     delay = [3,3,3,3]
-        #     key = ["e","n","esc","n"]
-        #     SpecialClick(key,delay)        
-
-        #     screen_gray = grab_screen_gray()
-        #     result = cv2.matchTemplate(screen_gray, templates["good"], method)
-        #     loc = np.where(result >= 0.85)
-        #     # Click on the matched locations
-        #     if loc[0].size > 0:
-        #         time.sleep(3)
-        #         for pt in zip(*loc[::-1]):
-        #             # Calculate the center of the matched template
-        #             x, y = pt[0] + templates["good"].shape[1], pt[1] + templates["good"].shape[0]
-        #             # Click on the center of the matched template
-        #             pyautogui.click(x, y)
-        #             pyautogui.moveTo(10,10)
-        #             time.sleep(3)
-        #             delay = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,3,3,3]
-        #             key = ["h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","h","esc","esc","esc","s"]
-        #             SpecialClick(key,delay)        
-        #             logging.info(f"Clicked on good ({x}, {y}) 25 time")
-        #             time.sleep(3)
-        #             break
-        #     Gathering_activated = False
-        #     continue
+ 
+        # Perform template matching for contribution
         def on_contribution(x, y):
             time.sleep(3)
             pyautogui.click(x, y)
@@ -347,7 +320,11 @@ def monitor_marchqueue(click_delay):
             break
 
         Gathering_activated = False    
-        time.sleep(30)        
+        if (window_index == 0):
+            window_index = 1
+        else:
+            window_index = 0
+        time.sleep(10)        
 
 # Function to search for images on the screen and click on them if found
 def search_and_click(images, threshold=0.95, click_delay=6, killswitch_key='q'):
@@ -363,32 +340,6 @@ def search_and_click(images, threshold=0.95, click_delay=6, killswitch_key='q'):
     farm_thread = threading.Thread(target=monitor_marchqueue, args=(30,))
     farm_thread.start()
 
-    while not killswitch_activated:
-        if Gathering_activated:
-            # Pause all actions while monitor_marchqueue is running
-            time.sleep(1)
-            continue
-        screen_gray = grab_screen_gray()
-        for image_path in images:
-            if not os.path.exists(image_path):
-                logging.error(f"Image not found at '{image_path}'")
-                continue
-            template = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-            def on_image_match(x, y):
-                pyautogui.click(x, y)
-                pyautogui.moveTo(10,10)
-                if "help" in str(image_path):
-                    time.sleep(0.1)
-                else:
-                    logging.info(f"Clicked on {image_path} at ({x}, {y})")
-            match_and_handle(screen_gray, template, threshold, on_image_match)
-            time.sleep(1)
-            if killswitch_activated:
-                break
-        if killswitch_activated:
-            break
-        time.sleep(1)
-    logging.info("Exiting the loop.")
 
 def SpecialClick(keypress,delay):
     global window_index
@@ -408,14 +359,7 @@ def main():
     # List of image paths to search for on the screen
     # Replace these with the paths to your actual images
     image_paths = [
-        r"C:\Users\LENOVO\Pictures\Screenshots\help.png",
-        r"C:\Users\LENOVO\Pictures\Screenshots\quitchat.png",
-        r"C:\Users\LENOVO\Pictures\Screenshots\shopquit.png",
-        r"C:\Users\LENOVO\Pictures\Screenshots\alliance.png",
-        r"C:\Users\LENOVO\Pictures\Screenshots\backpack.png",
-        r"C:\Users\LENOVO\Pictures\Screenshots\world.png",
-
-        # Add more image paths as needed
+        r"C:\Users\LENOVO\Pictures\Screenshots\help.png",    
     ]
 
     # Call the function with the list of image paths and optional parameters
