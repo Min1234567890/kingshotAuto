@@ -12,7 +12,9 @@ import pygetwindow as gw
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 # Global variables
 killswitch_activated = False
-Gathering_activated = False
+Rally_activated = False
+Rally_activated2 = False
+Farm_activated = True
 windows = gw.getWindowsWithTitle('wosmin') + gw.getWindowsWithTitle('WOSMIN')
 window_index = 0
 
@@ -77,6 +79,8 @@ def load_templates():
         "help": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\help.png", cv2.IMREAD_GRAYSCALE),
         "back": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\back.png", cv2.IMREAD_GRAYSCALE),
         "fountain": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\fountain.png", cv2.IMREAD_GRAYSCALE),
+        "rally": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\rally.png", cv2.IMREAD_GRAYSCALE),
+        "rally2": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\rally2.png", cv2.IMREAD_GRAYSCALE),
     }
 
 def grab_screen_gray():
@@ -90,18 +94,32 @@ def grab_screen_gray():
 # Function to monitor the killswitch key
 def monitor_killswitch(killswitch_key):
     global killswitch_activated
+    global Rally_activated
+    global Rally_activated2
+    global Farm_activated
     while True:
         if keyboard.is_pressed(killswitch_key):
             logging.info("Killswitch activated.")
             killswitch_activated = True
             break
+        if keyboard.is_pressed('r'):
+            logging.info("Rally activated.")
+            Rally_activated = not Rally_activated
+        if keyboard.is_pressed('t'):
+            logging.info("Rally 2 activated.")
+            Rally_activated2 = not Rally_activated2
+        if keyboard.is_pressed('f'):
+            logging.info("Farm activated.")
+            Farm_activated = not Farm_activated
         time.sleep(0.1)
 
 # Function to monitor the marchqueue empty
 def monitor_marchqueue(click_delay):
     global killswitch_activated
+    global Rally_activated
+    global Rally_activated2
+    global Farm_activated
     global windows
-    global Gathering_activated
     global window_index
     method = TM_METHOD
     templates = load_templates()
@@ -114,9 +132,12 @@ def monitor_marchqueue(click_delay):
             except Exception:
                 print("Ok")
 
+        # Check if killswitch is activated after processing each image
+        if killswitch_activated:
+            break
+
         time.sleep(3)
 
-        Gathering_activated = True
         #open wilderness
         delay = [1,3]
         key=["S","1"]
@@ -150,7 +171,7 @@ def monitor_marchqueue(click_delay):
         if match_and_handle(screen_gray, templates["back"], 0.7, on_back, region=(0, 0, 105, 117)):
             continue    
 
-
+        # Perform template matching for marchqueue
         def on_marchqueue(x, y):
             time.sleep(3)
             # additonal bread gathering
@@ -182,15 +203,48 @@ def monitor_marchqueue(click_delay):
             pyautogui.dragTo(70,768,duration = 1)
             SpecialClick(["L","F","G","1","2","E","s"], [1.5,1.5,2.5,1.5,1.5,1.5,1.5])
             
-            if windows[window_index].title == "wosmin":
-                SpecialClick(['I','I'], [1.5,1.5])
-                pyautogui.moveTo(522,768)
-                pyautogui.dragTo(70,768,duration = 1)
-                SpecialClick(["L","F","G","6","E","s"], [1.5,1.5,2.5,1.5,1.5,3])
+            # SpecialClick(['I','I'], [1.5,1.5])
+            # pyautogui.moveTo(522,768)
+            # pyautogui.dragTo(70,768,duration = 1)
+            # SpecialClick(["N","F","G","6","E","s"], [1.5,1.5,2.5,1.5,1.5,3])
+
+            SpecialClick(['I','I'], [1.5,1.5])
+            pyautogui.moveTo(522,768)
+            pyautogui.dragTo(70,768,duration = 1)
+            SpecialClick(["L","F","G","6","E","s"], [1.5,1.5,2.5,1.5,1.5,3])
+
             logging.info(f"finished sending army")
-        match_and_handle(screen_gray, templates["marchqueue"], 0.9, on_marchqueue)
+        if Farm_activated:
+            match_and_handle(screen_gray, templates["marchqueue"], 0.9, on_marchqueue)
         
-        #Go to town page       
+        # start to do rally
+        if Rally_activated:
+            def on_rally(x, y):
+                time.sleep(1)
+                pyautogui.moveTo(x, y)
+                time.sleep(1)
+                pyautogui.moveTo(10,10)
+                SpecialClick(['I','I'], [1.5,1.5])
+                pyautogui.moveTo(70,768)
+                pyautogui.dragTo(522,768,duration = 1)
+                SpecialClick(["o","f","9","u","7","e"], [1.5,2.5,1.5,1.5,1.5,1.5])
+                logging.info(f"Clicked on rally ({x}, {y})")
+            match_and_handle(screen_gray, templates["rally"], 0.8, on_rally,region=(108, 543, 250, 619))
+
+        # start to do rally 2
+        if Rally_activated2 and windows[window_index].title == "wosmin":
+            def on_rally2(x, y):
+                time.sleep(1)
+                pyautogui.moveTo(x, y)
+                time.sleep(1)
+                pyautogui.moveTo(10,10)
+                SpecialClick(['I','I'], [1.5,1.5])
+                pyautogui.moveTo(70,768)
+                pyautogui.dragTo(522,768,duration = 1)
+                SpecialClick(["o","f","9","u","8","e"], [1.5,2.5,1.5,1.5,1.5,1.5])
+                logging.info(f"Clicked on rally2 ({x}, {y})")
+            match_and_handle(screen_gray, templates["rally2"], 0.8, on_rally2,region=(108, 609, 280, 679))
+        #Go to town page
         delay = [0.5,2]
         key =["S","5"]
         SpecialClick(key,delay) 
@@ -205,7 +259,7 @@ def monitor_marchqueue(click_delay):
             pyautogui.click(x, y)
             pyautogui.moveTo(10,10)
             time.sleep(3)
-            SpecialClick(["9","g","a","s","s","t","esc","s"], [3,1.5,1.5,1.5,1.5,1.5,1.5,3])
+            SpecialClick(["9","g","a","9","9","t","esc","s"], [3,1.5,1.5,1.5,1.5,1.5,1.5,3])
         if match_and_handle(screen_gray, templates["completed"], 0.8, on_completed):
             continue
 
@@ -216,7 +270,7 @@ def monitor_marchqueue(click_delay):
             pyautogui.click(x, y)
             pyautogui.moveTo(10,10)
             time.sleep(3)
-            SpecialClick(["9","g","a","s","s","t","esc","s"], [3,1.5,1.5,1.5,1.5,1.5,1.5,3])
+            SpecialClick(["9","g","a","9","9","t","esc","s"], [3,1.5,1.5,1.5,1.5,1.5,1.5,3])
         if match_and_handle(screen_gray, templates["idle"], 0.8, on_idle, region=(67, 459, 351, 646)):
             continue
 
@@ -253,29 +307,25 @@ def monitor_marchqueue(click_delay):
 
         # Perform template online for online
         def on_online(x, y):
-            Gathering_activated = True
             pyautogui.click(x, y)
             pyautogui.moveTo(10,10)
             SpecialClick(["s","s"], [1,1])
             logging.info(f"Clicked on online ({x}, {y})")
-            Gathering_activated = False
         if match_and_handle(screen_gray, templates["online"], 0.85, on_online):
             continue
 
         # Perform template fountain for online
         def on_fountain(x, y):
-            Gathering_activated = True
             pyautogui.click(x, y)
             pyautogui.moveTo(10,10)
             SpecialClick(["9","L","home"], [1,1,1])
             logging.info(f"Clicked on fountain ({x}, {y})")
-            Gathering_activated = False
         if match_and_handle(screen_gray, templates["fountain"], 0.8, on_fountain):
             continue
 
         # Perform template matching for heroadvance            
         def on_heroadvance(x, y):
-            Gathering_activated = True
+            pyautogui.click(x, y)
             pyautogui.click(x, y)
             pyautogui.moveTo(10,10)
             logging.info(f"Clicked on advance hero ({x}, {y})")
@@ -290,8 +340,7 @@ def monitor_marchqueue(click_delay):
                 logging.info(f"free recruit ({x2}, {y2})")
                 time.sleep(3)
             match_and_handle(screen_gray2, templates["free"], 0.85, on_free)
-            Gathering_activated = False
-        if match_and_handle(screen_gray, templates["heroadvance"], 0.75, on_heroadvance):
+        if match_and_handle(screen_gray, templates["heroadvance"], 0.75, on_heroadvance, region=(62, 436, 300, 554)):
             continue
  
         # Perform template matching for contribution
@@ -311,7 +360,6 @@ def monitor_marchqueue(click_delay):
                 logging.info(f"Clicked on good ({x2}, {y2}) 25 time")
                 time.sleep(3)
             match_and_handle(screen_gray2, templates["good"], 0.85, on_good)
-            Gathering_activated = False
         if match_and_handle(screen_gray, templates["contribution"], 0.85, on_contribution):
             continue
 
@@ -319,7 +367,6 @@ def monitor_marchqueue(click_delay):
         if killswitch_activated:
             break
 
-        Gathering_activated = False    
         if (window_index == 0):
             window_index = 1
         else:
@@ -330,7 +377,6 @@ def monitor_marchqueue(click_delay):
 def search_and_click(images, threshold=0.95, click_delay=6, killswitch_key='q'):
     # Set the template matching method
     global screenshot
-    global Gathering_activated
     method = cv2.TM_CCOEFF_NORMED
 
     # Start monitoring the killswitch key in a separate thread
