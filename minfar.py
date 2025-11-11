@@ -19,8 +19,12 @@ windows = gw.getWindowsWithTitle('wosmin') + gw.getWindowsWithTitle('WOSMIN')
 window_index = 0
 
 # Constants
+# SCREEN_CROP is (left, top, right, bottom) in screen coordinates used for screenshot.crop()
 SCREEN_CROP = (0, 0, 622, 1080)
 TM_METHOD = cv2.TM_CCOEFF_NORMED
+
+# Safety: ensure pyautogui will raise FailSafeException if mouse moved to a corner
+pyautogui.FAILSAFE = True
 
 def match_and_handle(screen_gray, template, threshold, on_match, region=None):
     """
@@ -49,6 +53,10 @@ def match_and_handle(screen_gray, template, threshold, on_match, region=None):
             search_area = screen_gray
             x_offset = 0
             y_offset = 0
+
+    if template is None:
+        logging.warning("Template is None, skipping match.")
+        return False
 
     result = cv2.matchTemplate(search_area, template, TM_METHOD)
     loc = np.where(result >= threshold)
@@ -90,6 +98,84 @@ def grab_screen_gray():
     screen_np = np.array(screenshot)
     return cv2.cvtColor(screen_np, cv2.COLOR_RGB2GRAY)
 
+# ----- New helpers to avoid clicking outside of screen -----
+def to_screen_coords(x, y):
+    """Convert coordinates relative to the cropped image to absolute screen coordinates."""
+    left, top, right, bottom = SCREEN_CROP
+    return int(left + x), int(top + y)
+
+def clamp_to_screen(x, y):
+    """Clamp coordinates to the visible screen area."""
+    screen_w, screen_h = pyautogui.size()
+    cx = max(0, min(screen_w - 1, int(x)))
+    cy = max(0, min(screen_h - 1, int(y)))
+    return cx, cy
+
+def safe_click(x, y, clamp=True, button='left', clicks=1, interval=0.0):
+    """
+    Click at coordinates that are safe (inside screen bounds).
+    x, y are coordinates relative to the cropped screenshot used by match_and_handle.
+    If clamp is True the coordinates will be clamped to the nearest valid screen pixel.
+    """
+    try:
+        sx, sy = to_screen_coords(x, y)
+        if clamp:
+            cx, cy = clamp_to_screen(sx, sy)
+            if (cx, cy) != (sx, sy):
+                logging.warning(f"Requested click ({sx},{sy}) was outside screen; clamped to ({cx},{cy}).")
+            pyautogui.click(cx, cy, clicks=clicks, interval=interval, button=button)
+        else:
+            # If not clamping, skip clicks that are outside the screen
+            screen_w, screen_h = pyautogui.size()
+            if not (0 <= sx < screen_w and 0 <= sy < screen_h):
+                logging.warning(f"Requested click ({sx},{sy}) is outside screen; skipping.")
+                return
+            pyautogui.click(sx, sy, clicks=clicks, interval=interval, button=button)
+    except pyautogui.FailSafeException:
+        logging.error("PyAutoGUI failsafe triggered (mouse moved to a corner). Aborting click.")
+    except Exception as e:
+        logging.exception(f"safe_click failed: {e}")
+
+def safe_move(x, y, clamp=True, duration=0):
+    """Move mouse to a safe, clamped, screen coordinate."""
+    try:
+        sx, sy = to_screen_coords(x, y)
+        if clamp:
+            cx, cy = clamp_to_screen(sx, sy)
+            if (cx, cy) != (sx, sy):
+                logging.warning(f"Requested move ({sx},{sy}) was outside screen; clamped to ({cx},{cy}).")
+            pyautogui.moveTo(cx, cy, duration=duration)
+        else:
+            screen_w, screen_h = pyautogui.size()
+            if not (0 <= sx < screen_w and 0 <= sy < screen_h):
+                logging.warning(f"Requested move ({sx},{sy}) is outside screen; skipping.")
+                return
+            pyautogui.moveTo(sx, sy, duration=duration)
+    except pyautogui.FailSafeException:
+        logging.error("PyAutoGUI failsafe triggered (mouse moved to a corner). Aborting move.")
+    except Exception as e:
+        logging.exception(f"safe_move failed: {e}")
+
+def safe_dragTo(x, y, clamp=True, duration=0.0, button='left'):
+    """Drag to a safe, clamped screen coordinate. x,y are absolute on the cropped image space."""
+    try:
+        sx, sy = to_screen_coords(x, y)
+        if clamp:
+            cx, cy = clamp_to_screen(sx, sy)
+            if (cx, cy) != (sx, sy):
+                logging.warning(f"Requested drag target ({sx},{sy}) was outside screen; clamped to ({cx},{cy}).")
+            pyautogui.dragTo(cx, cy, duration=duration, button=button)
+        else:
+            screen_w, screen_h = pyautogui.size()
+            if not (0 <= sx < screen_w and 0 <= sy < screen_h):
+                logging.warning(f"Requested drag target ({sx},{sy}) is outside screen; skipping.")
+                return
+            pyautogui.dragTo(sx, sy, duration=duration, button=button)
+    except pyautogui.FailSafeException:
+        logging.error("PyAutoGUI failsafe triggered (mouse moved to a corner). Aborting drag.")
+    except Exception as e:
+        logging.exception(f"safe_dragTo failed: {e}")
+# ---------------------------------------------------------
 
 # Function to monitor the killswitch key
 def monitor_killswitch(killswitch_key):
@@ -146,27 +232,27 @@ def monitor_marchqueue(click_delay):
 
         #always click on world
         def on_world(x, y):
-            pyautogui.click(x, y)
+            safe_click(x, y)
             time.sleep(3)
-            pyautogui.moveTo(10,10)
+            safe_move(10,10)
             logging.info(f"Clicked on world ({x}, {y})")
         if match_and_handle(screen_gray, templates["world"], 0.9, on_world):
             continue
 
         #always click on help
         def on_help(x, y):
-            pyautogui.click(x, y)
+            safe_click(x, y)
             time.sleep(3)
-            pyautogui.moveTo(10,10)
+            safe_move(10,10)
             logging.info(f"Clicked on help ({x}, {y})")
         if match_and_handle(screen_gray, templates["help"], 0.8, on_help):
             continue    
 
         #always click on back
         def on_back(x, y):
-            pyautogui.click(x, y)
+            safe_click(x, y)
             time.sleep(3)
-            pyautogui.moveTo(10,10)
+            safe_move(10,10)
             logging.info(f"Clicked on back ({x}, {y})")
         if match_and_handle(screen_gray, templates["back"], 0.7, on_back, region=(0, 0, 105, 117)):
             continue    
@@ -175,42 +261,32 @@ def monitor_marchqueue(click_delay):
         def on_marchqueue(x, y):
             time.sleep(3)
             # additonal bread gathering
-            #delay = [1.5,1.5,1.5,1.5,1.5,2.5,1.5,1.5]
-            #key = ["I","left","left","O","F","G","6","E"]
-            #SpecialClick(key,delay)
-
-            # bread gathering
             SpecialClick(['I','I'], [1.5,1.5])
-            pyautogui.moveTo(522,768)
-            pyautogui.dragTo(70,768,duration = 1)
+            safe_move(522,768)
+            safe_dragTo(70,768, duration = 1)
             SpecialClick(['B','F','G','1','2','E'], [1.5,1.5,2.5,1.5,1.5,1.5])
             
             # wood gathering
             SpecialClick(['I','I'], [1.5,1.5])
-            pyautogui.moveTo(522,768)
-            pyautogui.dragTo(70,768,duration = 1)
+            safe_move(522,768)
+            safe_dragTo(70,768,duration = 1)
             SpecialClick(["O","F","G","1","2","E"], [1.5,1.5,2.5,1.5,1.5,1.5])
             
             # stone gathering
             SpecialClick(['I','I'], [1.5,1.5])
-            pyautogui.moveTo(522,768)
-            pyautogui.dragTo(70,768,duration = 1)
+            safe_move(522,768)
+            safe_dragTo(70,768,duration = 1)
             SpecialClick(["N","F","G","1","2","E"], [1.5,1.5,2.5,1.5,1.5,1.5])
             
             # iron gathering
             SpecialClick(['I','I'], [1.5,1.5])
-            pyautogui.moveTo(522,768)
-            pyautogui.dragTo(70,768,duration = 1)
+            safe_move(522,768)
+            safe_dragTo(70,768,duration = 1)
             SpecialClick(["L","F","G","1","2","E","s"], [1.5,1.5,2.5,1.5,1.5,1.5,1.5])
             
-            # SpecialClick(['I','I'], [1.5,1.5])
-            # pyautogui.moveTo(522,768)
-            # pyautogui.dragTo(70,768,duration = 1)
-            # SpecialClick(["N","F","G","6","E","s"], [1.5,1.5,2.5,1.5,1.5,3])
-
             SpecialClick(['I','I'], [1.5,1.5])
-            pyautogui.moveTo(522,768)
-            pyautogui.dragTo(70,768,duration = 1)
+            safe_move(522,768)
+            safe_dragTo(70,768,duration = 1)
             SpecialClick(["L","F","G","6","E","s"], [1.5,1.5,2.5,1.5,1.5,3])
 
             logging.info(f"finished sending army")
@@ -221,26 +297,26 @@ def monitor_marchqueue(click_delay):
         if Rally_activated:
             def on_rally(x, y):
                 time.sleep(1)
-                pyautogui.moveTo(x, y)
+                safe_move(x, y)
                 time.sleep(1)
-                pyautogui.moveTo(10,10)
+                safe_move(10,10)
                 SpecialClick(['I','I'], [1.5,1.5])
-                pyautogui.moveTo(70,768)
-                pyautogui.dragTo(522,768,duration = 1)
+                safe_move(70,768)
+                safe_dragTo(522,768,duration = 1)
                 SpecialClick(["o","f","9","u","7","e"], [1.5,2.5,1.5,1.5,1.5,1.5])
                 logging.info(f"Clicked on rally ({x}, {y})")
             match_and_handle(screen_gray, templates["rally"], 0.8, on_rally,region=(108, 543, 250, 619))
 
         # start to do rally 2
-        if Rally_activated2 and windows[window_index].title == "wosmin":
+        if Rally_activated2 and windows and windows[window_index].title == "wosmin":
             def on_rally2(x, y):
                 time.sleep(1)
-                pyautogui.moveTo(x, y)
+                safe_move(x, y)
                 time.sleep(1)
-                pyautogui.moveTo(10,10)
+                safe_move(10,10)
                 SpecialClick(['I','I'], [1.5,1.5])
-                pyautogui.moveTo(70,768)
-                pyautogui.dragTo(522,768,duration = 1)
+                safe_move(70,768)
+                safe_dragTo(522,768,duration = 1)
                 SpecialClick(["o","f","9","u","8","e"], [1.5,2.5,1.5,1.5,1.5,1.5])
                 logging.info(f"Clicked on rally2 ({x}, {y})")
             match_and_handle(screen_gray, templates["rally2"], 0.8, on_rally2,region=(108, 609, 280, 679))
@@ -256,8 +332,8 @@ def monitor_marchqueue(click_delay):
         def on_completed(x, y):
             logging.info(f"Clicked on completed ({x}, {y})")
             time.sleep(3)
-            pyautogui.click(x, y)
-            pyautogui.moveTo(10,10)
+            safe_click(x, y)
+            safe_move(10,10)
             time.sleep(3)
             SpecialClick(["9","g","a","9","9","t","esc","s"], [3,1.5,1.5,1.5,1.5,1.5,1.5,3])
         if match_and_handle(screen_gray, templates["completed"], 0.8, on_completed):
@@ -267,8 +343,8 @@ def monitor_marchqueue(click_delay):
         def on_idle(x, y):
             logging.info(f"Clicked on idle ({x}, {y})")
             time.sleep(3)
-            pyautogui.click(x, y)
-            pyautogui.moveTo(10,10)
+            safe_click(x, y)
+            safe_move(10,10)
             time.sleep(3)
             SpecialClick(["9","g","a","9","9","t","esc","s"], [3,1.5,1.5,1.5,1.5,1.5,1.5,3])
         if match_and_handle(screen_gray, templates["idle"], 0.8, on_idle, region=(67, 459, 351, 646)):
@@ -277,18 +353,28 @@ def monitor_marchqueue(click_delay):
         # check for conquest here
         def on_conquest(x, y):
             time.sleep(3)
-            pyautogui.click(x, y)
-            pyautogui.moveTo(10,10)
+            safe_click(x, y)
+            safe_move(10,10)
             time.sleep(3)
             # click on conquest 1
             screen_gray2 = grab_screen_gray()
-            if match_and_handle(screen_gray2, templates["conquest1"], 0.9, lambda x2, y2: (pyautogui.click(x2, y2), pyautogui.moveTo(10,10), logging.info(f"Clicked on conquest1 ({x2}, {y2})"), time.sleep(3))):
+            # click conquest1 if present
+            def handle_c1(x2, y2):
+                safe_click(x2, y2)
+                safe_move(10,10)
+                logging.info(f"Clicked on conquest1 ({x2}, {y2})")
+            if match_and_handle(screen_gray2, templates["conquest1"], 0.9, handle_c1):
+                time.sleep(1)
                 screen_gray2 = grab_screen_gray()
-                match_and_handle(screen_gray2, templates["conquest2"], 0.9, lambda x2, y2: (pyautogui.click(x2, y2), pyautogui.moveTo(10,10), logging.info(f"Clicked on conquest2 ({x2}, {y2})"), time.sleep(3)))
+                def handle_c2(x2, y2):
+                    safe_click(x2, y2)
+                    safe_move(10,10)
+                    logging.info(f"Clicked on conquest2 ({x2}, {y2})")
+                match_and_handle(screen_gray2, templates["conquest2"], 0.9, handle_c2)
                 SpecialClick(["s","esc"], [1,1])
                 time.sleep(3)
             logging.info(f"Clicked on conquest ({x}, {y})")
-        # Limit conquest match to rectangle (58,990)-(104,1030)
+        # Limit conquest match to rectangle (40,967)-(113,1023)
         if match_and_handle(screen_gray, templates["conquest"], 0.7, on_conquest, region=(40, 967, 113, 1023)):
             continue
 
@@ -298,8 +384,9 @@ def monitor_marchqueue(click_delay):
         SpecialClick(key,delay) 
         time.sleep(2)
 
-        pyautogui.moveTo(201,694)
-        pyautogui.dragTo(201,286,duration = 1)
+        # swipe up
+        safe_move(201,694)
+        safe_dragTo(201,286,duration = 1)
 
         time.sleep(2)
 
@@ -307,8 +394,8 @@ def monitor_marchqueue(click_delay):
 
         # Perform template online for online
         def on_online(x, y):
-            pyautogui.click(x, y)
-            pyautogui.moveTo(10,10)
+            safe_click(x, y)
+            safe_move(10,10)
             SpecialClick(["s","s"], [1,1])
             logging.info(f"Clicked on online ({x}, {y})")
         if match_and_handle(screen_gray, templates["online"], 0.85, on_online):
@@ -316,8 +403,8 @@ def monitor_marchqueue(click_delay):
 
         # Perform template fountain for online
         def on_fountain(x, y):
-            pyautogui.click(x, y)
-            pyautogui.moveTo(10,10)
+            safe_click(x, y)
+            safe_move(10,10)
             SpecialClick(["9","L","home"], [1,1,1])
             logging.info(f"Clicked on fountain ({x}, {y})")
         if match_and_handle(screen_gray, templates["fountain"], 0.8, on_fountain):
@@ -325,16 +412,16 @@ def monitor_marchqueue(click_delay):
 
         # Perform template matching for heroadvance            
         def on_heroadvance(x, y):
-            pyautogui.click(x, y)
-            pyautogui.click(x, y)
-            pyautogui.moveTo(10,10)
+            safe_click(x, y)
+            safe_click(x, y)
+            safe_move(10,10)
             logging.info(f"Clicked on advance hero ({x}, {y})")
             time.sleep(3)
             # recruit hero
             screen_gray2 = grab_screen_gray()
             def on_free(x2, y2):
-                pyautogui.click(x2, y2)
-                pyautogui.moveTo(10,10)
+                safe_click(x2, y2)
+                safe_move(10,10)
                 time.sleep(3)
                 SpecialClick(["s","esc","esc","s"], [3,3,3,3])
                 logging.info(f"free recruit ({x2}, {y2})")
@@ -346,16 +433,17 @@ def monitor_marchqueue(click_delay):
         # Perform template matching for contribution
         def on_contribution(x, y):
             time.sleep(3)
-            pyautogui.click(x, y)
-            pyautogui.moveTo(10,10)
+            safe_click(x, y)
+            safe_move(10,10)
             logging.info(f"contribution  ({x}, {y})")
             time.sleep(3)
             SpecialClick(["e","n","esc","n"], [3,3,3,3])
             screen_gray2 = grab_screen_gray()
             def on_good(x2, y2):
-                pyautogui.click(x2, y2)
-                pyautogui.moveTo(10,10)
+                safe_click(x2, y2)
+                safe_move(10,10)
                 time.sleep(3)
+                # press 'h' 24 times then 'esc' 3 times and 's' once
                 SpecialClick(["h"]*24 + ["esc"]*3 + ["s"], [1]*24 + [3]*4)
                 logging.info(f"Clicked on good ({x2}, {y2}) 25 time")
                 time.sleep(3)
@@ -387,7 +475,7 @@ def search_and_click(images, threshold=0.95, click_delay=6, killswitch_key='q'):
     farm_thread.start()
 
 
-def SpecialClick(keypress,delay):
+def SpecialClick(keypress, delay):
     global window_index
     if windows:
         try:
@@ -396,7 +484,7 @@ def SpecialClick(keypress,delay):
             print("Ok")
         time.sleep(1)
   
-        for key,delayclick in zip(keypress,delay):
+        for key, delayclick in zip(keypress, delay):
             time.sleep(delayclick)
             pyautogui.press(key)
 
