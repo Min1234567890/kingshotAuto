@@ -91,6 +91,40 @@ def grab_screen_gray():
     return cv2.cvtColor(screen_np, cv2.COLOR_RGB2GRAY)
 
 
+def safe_press(key):
+    """
+    Safely press a key, ensuring the target window is active and within bounds.
+    Wraps pyautogui.press with error handling and logging.
+    Returns False if the keypress was skipped, True if successful.
+    """
+    global windows, window_index
+    try:
+        # Verify window is still available and active
+        if not windows:
+            logging.warning(f"No windows available. Skipping keypress for key '{key}'.")
+            return False
+        
+        if not (0 <= window_index < len(windows)):
+            logging.warning(f"window_index {window_index} is out of bounds (0-{len(windows)-1}). Skipping keypress for key '{key}'.")
+            return False
+        
+        try:
+            windows[window_index].activate()
+        except Exception as e:
+            logging.warning(f"Could not activate window before keypress: {e}. Skipping keypress for key '{key}'.")
+            return False
+        
+        # Perform the keypress
+        pyautogui.press(key)
+        return True
+    except pyautogui.FailSafeException:
+        logging.error("PyAutoGUI failsafe triggered (mouse moved to a corner). Aborting keypress.")
+        return False
+    except Exception as e:
+        logging.exception(f"safe_press failed for key '{key}': {e}")
+        return False
+
+
 # Function to monitor the killswitch key
 def monitor_killswitch(killswitch_key):
     global killswitch_activated
@@ -387,18 +421,17 @@ def search_and_click(images, threshold=0.95, click_delay=6, killswitch_key='q'):
     farm_thread.start()
 
 
-def SpecialClick(keypress,delay):
-    global window_index
-    if windows:
-        try:
-            windows[window_index].activate()
-        except Exception:
-            print("Ok")
-        time.sleep(1)
+def SpecialClick(keypress, delay):
+    """
+    Press a sequence of keys with specified delays, with boundary/safety checks.
+    Uses safe_press to ensure window activation and proper error handling.
+    """
+    # Wait before starting keypresses to allow for window focus
+    time.sleep(1)
   
-        for key,delayclick in zip(keypress,delay):
-            time.sleep(delayclick)
-            pyautogui.press(key)
+    for key, delayclick in zip(keypress, delay):
+        time.sleep(delayclick)
+        safe_press(key)
 
 # Main function to execute the script
 def main():
