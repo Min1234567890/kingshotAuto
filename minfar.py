@@ -72,23 +72,23 @@ def match_and_handle(screen_gray, template, threshold, on_match, region=None):
 def load_templates():
     """Load and return all templates used by the script as a dict of grayscale images."""
     return {
-        "marchqueue": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\marchqueue.png", cv2.IMREAD_GRAYSCALE),
-        "online": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\online.png", cv2.IMREAD_GRAYSCALE),
-        "completed": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\completed.png", cv2.IMREAD_GRAYSCALE),
-        "heroadvance": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\heroadvance.png", cv2.IMREAD_GRAYSCALE),
-        "contribution": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\contribution.png", cv2.IMREAD_GRAYSCALE),
-        "good": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\good.png", cv2.IMREAD_GRAYSCALE),
-        "free": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\free.png", cv2.IMREAD_GRAYSCALE),
-        "idle": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\idle.png", cv2.IMREAD_GRAYSCALE),
-        "world": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\world.png", cv2.IMREAD_GRAYSCALE),
-        "conquest": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\conquest.png", cv2.IMREAD_GRAYSCALE),
-        "conquest1": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\conquest1.png", cv2.IMREAD_GRAYSCALE),
-        "conquest2": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\conquest2.png", cv2.IMREAD_GRAYSCALE),
-        "help": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\help.png", cv2.IMREAD_GRAYSCALE),
-        "back": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\back.png", cv2.IMREAD_GRAYSCALE),
-        "fountain": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\fountain.png", cv2.IMREAD_GRAYSCALE),
-        "rally": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\rally.png", cv2.IMREAD_GRAYSCALE),
-        "rally2": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\rally2.png", cv2.IMREAD_GRAYSCALE),
+        "marchqueue": cv2.imread(r"C:\Users\User\Pictures\Screenshots\gameplay\marchqueue.png", cv2.IMREAD_GRAYSCALE),
+        "online": cv2.imread(r"C:\Users\User\Pictures\Screenshots\gameplay\online.png", cv2.IMREAD_GRAYSCALE),
+        "completed": cv2.imread(r"C:\Users\User\Pictures\Screenshots\gameplay\completed.png", cv2.IMREAD_GRAYSCALE),
+        "heroadvance": cv2.imread(r"C:\Users\User\Pictures\Screenshots\gameplay\heroadvance.png", cv2.IMREAD_GRAYSCALE),
+        "contribution": cv2.imread(r"C:\Users\User\Pictures\Screenshots\gameplay\contribution.png", cv2.IMREAD_GRAYSCALE),
+        "good": cv2.imread(r"C:\Users\User\Pictures\Screenshots\gameplay\good.png", cv2.IMREAD_GRAYSCALE),
+        "free": cv2.imread(r"C:\Users\User\Pictures\Screenshots\gameplay\free.png", cv2.IMREAD_GRAYSCALE),
+        "idle": cv2.imread(r"C:\Users\User\Pictures\Screenshots\gameplay\idle.png", cv2.IMREAD_GRAYSCALE),
+        "world": cv2.imread(r"C:\Users\User\Pictures\Screenshots\gameplay\world.png", cv2.IMREAD_GRAYSCALE),
+        "conquest": cv2.imread(r"C:\Users\User\Pictures\Screenshots\gameplay\conquest.png", cv2.IMREAD_GRAYSCALE),
+        "conquest1": cv2.imread(r"C:\Users\User\Pictures\Screenshots\gameplay\conquest1.png", cv2.IMREAD_GRAYSCALE),
+        "conquest2": cv2.imread(r"C:\Users\User\Pictures\Screenshots\gameplay\conquest2.png", cv2.IMREAD_GRAYSCALE),
+        "help": cv2.imread(r"C:\Users\User\Pictures\Screenshots\gameplay\help.png", cv2.IMREAD_GRAYSCALE),
+        "back": cv2.imread(r"C:\Users\User\Pictures\Screenshots\gameplay\back.png", cv2.IMREAD_GRAYSCALE),
+        "fountain": cv2.imread(r"C:\Users\User\Pictures\Screenshots\gameplay\fountain.png", cv2.IMREAD_GRAYSCALE),
+        "rally": cv2.imread(r"C:\Users\User\Pictures\Screenshots\gameplay\rally.png", cv2.IMREAD_GRAYSCALE),
+        "rally2": cv2.imread(r"C:\Users\User\Pictures\Screenshots\gameplay\rally2.png", cv2.IMREAD_GRAYSCALE),
     }
 
 def grab_screen_gray():
@@ -235,7 +235,7 @@ def monitor_marchqueue(click_delay):
             safe_click(x, y)
             time.sleep(3)
             safe_move(10,10)
-            logging.info(f"Clicked on world ({x}, {y})")
+            logging.info(f"Clicked on world ({x}, {y}) " + windows[window_index].title)
         if match_and_handle(screen_gray, templates["world"], 0.9, on_world):
             continue
 
@@ -244,7 +244,7 @@ def monitor_marchqueue(click_delay):
             safe_click(x, y)
             time.sleep(3)
             safe_move(10,10)
-            logging.info(f"Clicked on help ({x}, {y})")
+            logging.info(f"Clicked on help ({x}, {y}) " + windows[window_index].title)
         if match_and_handle(screen_gray, templates["help"], 0.8, on_help):
             continue    
 
@@ -253,7 +253,7 @@ def monitor_marchqueue(click_delay):
             safe_click(x, y)
             time.sleep(3)
             safe_move(10,10)
-            logging.info(f"Clicked on back ({x}, {y})")
+            logging.info(f"Clicked on back ({x}, {y}) " + windows[window_index].title)
         if match_and_handle(screen_gray, templates["back"], 0.7, on_back, region=(0, 0, 105, 117)):
             continue    
 
@@ -289,9 +289,9 @@ def monitor_marchqueue(click_delay):
             safe_dragTo(70,768,duration = 1)
             SpecialClick(["L","F","G","6","E","s"], [1.5,1.5,2.5,1.5,1.5,3])
 
-            logging.info(f"finished sending army")
+            logging.info(f"finished sending army " + windows[window_index].title)
         if Farm_activated:
-            match_and_handle(screen_gray, templates["marchqueue"], 0.9, on_marchqueue)
+            match_and_handle(screen_gray, templates["marchqueue"], 0.8, on_marchqueue)
         
         # start to do rally
         if Rally_activated:
@@ -303,12 +303,12 @@ def monitor_marchqueue(click_delay):
                 SpecialClick(['I','I'], [1.5,1.5])
                 safe_move(70,768)
                 safe_dragTo(522,768,duration = 1)
-                SpecialClick(["o","f","9","u","7","e"], [1.5,2.5,1.5,1.5,1.5,1.5])
-                logging.info(f"Clicked on rally ({x}, {y})")
-            match_and_handle(screen_gray, templates["rally"], 0.8, on_rally,region=(108, 543, 250, 619))
+                SpecialClick(["o","f","9","u","8","e"], [1.5,2.5,1.5,1.5,1.5,1.5])
+                logging.info(f"Clicked on rally ({x}, {y}) "+ windows[window_index].title)
+            match_and_handle(screen_gray, templates["rally"], 0.8, on_rally,region=(108, 543, 280, 638))
 
         # start to do rally 2
-        if Rally_activated2 and windows and windows[window_index].title == "wosmin":
+        if Rally_activated2:
             def on_rally2(x, y):
                 time.sleep(1)
                 safe_move(x, y)
@@ -318,8 +318,8 @@ def monitor_marchqueue(click_delay):
                 safe_move(70,768)
                 safe_dragTo(522,768,duration = 1)
                 SpecialClick(["o","f","9","u","8","e"], [1.5,2.5,1.5,1.5,1.5,1.5])
-                logging.info(f"Clicked on rally2 ({x}, {y})")
-            match_and_handle(screen_gray, templates["rally2"], 0.8, on_rally2,region=(108, 609, 280, 679))
+                logging.info(f"Clicked on rally2 ({x}, {y}) " + windows[window_index].title)
+            match_and_handle(screen_gray, templates["rally2"], 0.7, on_rally2,region=(108, 561, 280, 638))
         #Go to town page
         delay = [0.5,2]
         key =["S","5"]
@@ -330,24 +330,32 @@ def monitor_marchqueue(click_delay):
 
         # Perform template online for cavalry inf archer
         def on_completed(x, y):
-            logging.info(f"Clicked on completed ({x}, {y})")
+            logging.info(f"Clicked on completed ({x}, {y}) " + windows[window_index].title)
             time.sleep(3)
             safe_click(x, y)
             safe_move(10,10)
             time.sleep(3)
-            SpecialClick(["9","g","a","9","9","t","esc","s"], [3,1.5,1.5,1.5,1.5,1.5,1.5,3])
-        if match_and_handle(screen_gray, templates["completed"], 0.8, on_completed):
+            if windows[window_index].title =='wosmin' or windows[window_index].title =='WOSMIN':
+                SpecialClick(["9","g","p","9","9","t","esc","s"], [3,1.5,1.5,1.5,1.5,1.5,1.5,3])
+            else:
+                SpecialClick(["9","g","a","9","9","t","esc","s"], [3,1.5,1.5,1.5,1.5,1.5,1.5,3])    
+            
+        if match_and_handle(screen_gray, templates["completed"], 0.7, on_completed):
             continue
 
         # peform template matching for idle
         def on_idle(x, y):
-            logging.info(f"Clicked on idle ({x}, {y})")
+            logging.info(f"Clicked on idle ({x}, {y}) " + windows[window_index].title)
             time.sleep(3)
             safe_click(x, y)
             safe_move(10,10)
             time.sleep(3)
-            SpecialClick(["9","g","a","9","9","t","esc","s"], [3,1.5,1.5,1.5,1.5,1.5,1.5,3])
-        if match_and_handle(screen_gray, templates["idle"], 0.8, on_idle, region=(67, 459, 351, 646)):
+            if windows[window_index].title =='wosmin' or windows[window_index].title =='WOSMIN':
+                SpecialClick(["9","g","p","9","9","t","esc","s"], [3,1.5,1.5,1.5,1.5,1.5,1.5,3])
+            else:
+                SpecialClick(["9","g","a","9","9","t","esc","s"], [3,1.5,1.5,1.5,1.5,1.5,1.5,3])
+            #SpecialClick(["9","g","a","9","9","t","esc","s"], [3,1.5,1.5,1.5,1.5,1.5,1.5,3])
+        if match_and_handle(screen_gray, templates["idle"], 0.7, on_idle, region=(67, 439, 351, 605)):
             continue
 
         # check for conquest here
@@ -362,20 +370,20 @@ def monitor_marchqueue(click_delay):
             def handle_c1(x2, y2):
                 safe_click(x2, y2)
                 safe_move(10,10)
-                logging.info(f"Clicked on conquest1 ({x2}, {y2})")
-            if match_and_handle(screen_gray2, templates["conquest1"], 0.9, handle_c1):
+                logging.info(f"Clicked on conquest1 ({x2}, {y2}) " + windows[window_index].title)
+            if match_and_handle(screen_gray2, templates["conquest1"], 0.8, handle_c1):
                 time.sleep(1)
                 screen_gray2 = grab_screen_gray()
                 def handle_c2(x2, y2):
                     safe_click(x2, y2)
                     safe_move(10,10)
-                    logging.info(f"Clicked on conquest2 ({x2}, {y2})")
-                match_and_handle(screen_gray2, templates["conquest2"], 0.9, handle_c2)
+                    logging.info(f"Clicked on conquest2 ({x2}, {y2}) " + windows[window_index].title)
+                match_and_handle(screen_gray2, templates["conquest2"], 0.75, handle_c2)
                 SpecialClick(["s","esc"], [1,1])
                 time.sleep(3)
-            logging.info(f"Clicked on conquest ({x}, {y})")
+            logging.info(f"Clicked on conquest ({x}, {y}) " + windows[window_index].title)
         # Limit conquest match to rectangle (40,967)-(113,1023)
-        if match_and_handle(screen_gray, templates["conquest"], 0.7, on_conquest, region=(40, 967, 113, 1023)):
+        if match_and_handle(screen_gray, templates["conquest"], 0.85, on_conquest, region=(40, 924, 113, 976)):
             continue
 
         #check for online gift here
@@ -386,9 +394,9 @@ def monitor_marchqueue(click_delay):
 
         # swipe up
         safe_move(201,694)
-        safe_dragTo(201,286,duration = 1)
+        safe_dragTo(201,60,duration = 1)
 
-        time.sleep(2)
+        time.sleep(4)
 
         screen_gray = grab_screen_gray()
 
@@ -397,8 +405,8 @@ def monitor_marchqueue(click_delay):
             safe_click(x, y)
             safe_move(10,10)
             SpecialClick(["s","s"], [1,1])
-            logging.info(f"Clicked on online ({x}, {y})")
-        if match_and_handle(screen_gray, templates["online"], 0.85, on_online):
+            logging.info(f"Clicked on online ({x}, {y}) " + windows[window_index].title)
+        if match_and_handle(screen_gray, templates["online"], 0.7, on_online):
             continue
 
         # Perform template fountain for online
@@ -406,13 +414,12 @@ def monitor_marchqueue(click_delay):
             safe_click(x, y)
             safe_move(10,10)
             SpecialClick(["9","L","home"], [1,1,1])
-            logging.info(f"Clicked on fountain ({x}, {y})")
-        if match_and_handle(screen_gray, templates["fountain"], 0.8, on_fountain):
+            logging.info(f"Clicked on fountain ({x}, {y}) ")
+        if match_and_handle(screen_gray, templates["fountain"], 0.85, on_fountain):
             continue
 
         # Perform template matching for heroadvance            
         def on_heroadvance(x, y):
-            safe_click(x, y)
             safe_click(x, y)
             safe_move(10,10)
             logging.info(f"Clicked on advance hero ({x}, {y})")
@@ -424,10 +431,10 @@ def monitor_marchqueue(click_delay):
                 safe_move(10,10)
                 time.sleep(3)
                 SpecialClick(["s","esc","esc","s"], [3,3,3,3])
-                logging.info(f"free recruit ({x2}, {y2})")
+                logging.info(f"free recruit ({x2}, {y2}) " + windows[window_index].title)
                 time.sleep(3)
             match_and_handle(screen_gray2, templates["free"], 0.85, on_free)
-        if match_and_handle(screen_gray, templates["heroadvance"], 0.75, on_heroadvance, region=(62, 436, 300, 554)):
+        if match_and_handle(screen_gray, templates["heroadvance"], 0.7, on_heroadvance, region=(62, 296, 300, 532)):
             continue
  
         # Perform template matching for contribution
@@ -435,7 +442,6 @@ def monitor_marchqueue(click_delay):
             time.sleep(3)
             safe_click(x, y)
             safe_move(10,10)
-            logging.info(f"contribution  ({x}, {y})")
             time.sleep(3)
             SpecialClick(["e","n","esc","n"], [3,3,3,3])
             screen_gray2 = grab_screen_gray()
@@ -445,10 +451,10 @@ def monitor_marchqueue(click_delay):
                 time.sleep(3)
                 # press 'h' 24 times then 'esc' 3 times and 's' once
                 SpecialClick(["h"]*24 + ["esc"]*3 + ["s"], [1]*24 + [3]*4)
-                logging.info(f"Clicked on good ({x2}, {y2}) 25 time")
+                logging.info(f"Clicked on good ({x2}, {y2}) 25 time " + windows[window_index].title)
                 time.sleep(3)
             match_and_handle(screen_gray2, templates["good"], 0.85, on_good)
-        if match_and_handle(screen_gray, templates["contribution"], 0.85, on_contribution):
+        if match_and_handle(screen_gray, templates["contribution"], 0.8, on_contribution):
             continue
 
         # Check if killswitch is activated after processing each image
@@ -493,7 +499,7 @@ def main():
     # List of image paths to search for on the screen
     # Replace these with the paths to your actual images
     image_paths = [
-        r"C:\Users\LENOVO\Pictures\Screenshots\help.png",    
+        r"C:\Users\User\Pictures\Screenshots\gameplay\help.png",    
     ]
 
     # Call the function with the list of image paths and optional parameters
