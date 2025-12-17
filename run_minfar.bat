@@ -1,0 +1,6 @@
+@echo off
+title KingShotAutoConsole
+cd /d "%~dp0"
+call .venv\Scripts\activate.bat
+python minfar.py
+pause

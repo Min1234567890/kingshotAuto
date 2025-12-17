@@ -16,7 +16,23 @@ Rally_activated = False
 Rally_activated2 = False
 Farm_activated = True
 windows = gw.getWindowsWithTitle('wosmin') + gw.getWindowsWithTitle('WOSMIN')
+if windows:
+    for win in windows:
+        try:
+            win.moveTo(1, 1)
+            logging.info(f"Window '{win.title}' moved to (0, 0)")
+        except Exception as e:
+            logging.error(f"Failed to move window '{win.title}': {e}")
 window_index = 0
+
+# Move console window
+console_windows = gw.getWindowsWithTitle('KingShotAutoConsole')
+if console_windows:
+    try:
+        console_windows[0].moveTo(650, 0)
+        logging.info("Console window moved to (650, 0)")
+    except Exception as e:
+        logging.error(f"Failed to move console window: {e}")
 
 # Constants
 SCREEN_CROP = (0, 0, 622, 1080)
@@ -63,24 +79,25 @@ def match_and_handle(screen_gray, template, threshold, on_match, region=None):
 
 def load_templates():
     """Load and return all templates used by the script as a dict of grayscale images."""
+    base_dir = os.path.join(os.path.dirname(__file__), 'gameplay')
     return {
-        "marchqueue": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\marchqueue.png", cv2.IMREAD_GRAYSCALE),
-        "online": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\online.png", cv2.IMREAD_GRAYSCALE),
-        "completed": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\completed.png", cv2.IMREAD_GRAYSCALE),
-        "heroadvance": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\heroadvance.png", cv2.IMREAD_GRAYSCALE),
-        "contribution": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\contribution.png", cv2.IMREAD_GRAYSCALE),
-        "good": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\good.png", cv2.IMREAD_GRAYSCALE),
-        "free": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\free.png", cv2.IMREAD_GRAYSCALE),
-        "idle": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\idle.png", cv2.IMREAD_GRAYSCALE),
-        "world": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\world.png", cv2.IMREAD_GRAYSCALE),
-        "conquest": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\conquest.png", cv2.IMREAD_GRAYSCALE),
-        "conquest1": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\conquest1.png", cv2.IMREAD_GRAYSCALE),
-        "conquest2": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\conquest2.png", cv2.IMREAD_GRAYSCALE),
-        "help": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\help.png", cv2.IMREAD_GRAYSCALE),
-        "back": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\back.png", cv2.IMREAD_GRAYSCALE),
-        "fountain": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\fountain.png", cv2.IMREAD_GRAYSCALE),
-        "rally": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\rally.png", cv2.IMREAD_GRAYSCALE),
-        "rally2": cv2.imread(r"C:\Users\LENOVO\Pictures\Screenshots\rally2.png", cv2.IMREAD_GRAYSCALE),
+        "marchqueue": cv2.imread(os.path.join(base_dir, "marchqueue.png"), cv2.IMREAD_GRAYSCALE),
+        "online": cv2.imread(os.path.join(base_dir, "online.png"), cv2.IMREAD_GRAYSCALE),
+        "completed": cv2.imread(os.path.join(base_dir, "completed.png"), cv2.IMREAD_GRAYSCALE),
+        "heroadvance": cv2.imread(os.path.join(base_dir, "heroadvance.png"), cv2.IMREAD_GRAYSCALE),
+        "contribution": cv2.imread(os.path.join(base_dir, "contribution.png"), cv2.IMREAD_GRAYSCALE),
+        "good": cv2.imread(os.path.join(base_dir, "good.png"), cv2.IMREAD_GRAYSCALE),
+        "free": cv2.imread(os.path.join(base_dir, "free.png"), cv2.IMREAD_GRAYSCALE),
+        "idle": cv2.imread(os.path.join(base_dir, "idle.png"), cv2.IMREAD_GRAYSCALE),
+        "world": cv2.imread(os.path.join(base_dir, "world.png"), cv2.IMREAD_GRAYSCALE),
+        "conquest": cv2.imread(os.path.join(base_dir, "conquest.png"), cv2.IMREAD_GRAYSCALE),
+        "conquest1": cv2.imread(os.path.join(base_dir, "conquest1.png"), cv2.IMREAD_GRAYSCALE),
+        "conquest2": cv2.imread(os.path.join(base_dir, "conquest2.png"), cv2.IMREAD_GRAYSCALE),
+        "help": cv2.imread(os.path.join(base_dir, "help.png"), cv2.IMREAD_GRAYSCALE),
+        "back": cv2.imread(os.path.join(base_dir, "back.png"), cv2.IMREAD_GRAYSCALE),
+        "fountain": cv2.imread(os.path.join(base_dir, "fountain.png"), cv2.IMREAD_GRAYSCALE),
+        "rally": cv2.imread(os.path.join(base_dir, "rally.png"), cv2.IMREAD_GRAYSCALE),
+        "rally2": cv2.imread(os.path.join(base_dir, "rally2.png"), cv2.IMREAD_GRAYSCALE),
     }
 
 def grab_screen_gray():
@@ -244,7 +261,7 @@ def monitor_marchqueue(click_delay):
 
             SpecialClick(['I','I'], [1.5,1.5])
             pyautogui.moveTo(522,768)
-            pyautogui.dragTo(70,768,duration = 1)
+            pyautogui.dragTo(10,768,duration = 1)
             SpecialClick(["L","F","G","6","E","s"], [1.5,1.5,2.5,1.5,1.5,3])
 
             logging.info(f"finished sending army")
@@ -263,7 +280,7 @@ def monitor_marchqueue(click_delay):
                 pyautogui.dragTo(522,768,duration = 1)
                 SpecialClick(["o","f","9","u","7","e"], [1.5,2.5,1.5,1.5,1.5,1.5])
                 logging.info(f"Clicked on rally ({x}, {y})")
-            match_and_handle(screen_gray, templates["rally"], 0.8, on_rally,region=(108, 543, 250, 619))
+            match_and_handle(screen_gray, templates["rally"], 0.7, on_rally,region=(108, 543, 280, 638))
 
         # start to do rally 2
         if Rally_activated2 and windows[window_index].title == "wosmin":
@@ -277,7 +294,7 @@ def monitor_marchqueue(click_delay):
                 pyautogui.dragTo(522,768,duration = 1)
                 SpecialClick(["o","f","9","u","8","e"], [1.5,2.5,1.5,1.5,1.5,1.5])
                 logging.info(f"Clicked on rally2 ({x}, {y})")
-            match_and_handle(screen_gray, templates["rally2"], 0.8, on_rally2,region=(108, 609, 280, 679))
+            match_and_handle(screen_gray, templates["rally2"], 0.8, on_rally2,region=(108, 581, 280, 639))
         #Go to town page
         delay = [0.5,2]
         key =["S","5"]
@@ -293,7 +310,11 @@ def monitor_marchqueue(click_delay):
             pyautogui.click(x, y)
             pyautogui.moveTo(10,10)
             time.sleep(3)
-            SpecialClick(["9","g","a","9","9","t","esc","s"], [3,1.5,1.5,1.5,1.5,1.5,1.5,3])
+            if windows[window_index].title == "wosmin" or windows[window_index].title == "WOSMIN":
+                SpecialClick(["9","g","p","9","9","t","esc","s"], [3,1.5,1.5,1.5,1.5,1.5,1.5,3])
+            else:
+                SpecialClick(["9","g","a","9","9","t","esc","s"], [3,1.5,1.5,1.5,1.5,1.5,1.5,3])
+
         if match_and_handle(screen_gray, templates["completed"], 0.8, on_completed):
             continue
 
@@ -323,7 +344,7 @@ def monitor_marchqueue(click_delay):
                 time.sleep(3)
             logging.info(f"Clicked on conquest ({x}, {y})")
         # Limit conquest match to rectangle (58,990)-(104,1030)
-        if match_and_handle(screen_gray, templates["conquest"], 0.7, on_conquest, region=(40, 967, 113, 1023)):
+        if match_and_handle(screen_gray, templates["conquest"], 0.8, on_conquest, region=(68, 946, 90, 966)):
             continue
 
         #check for online gift here
@@ -333,7 +354,7 @@ def monitor_marchqueue(click_delay):
         time.sleep(2)
 
         pyautogui.moveTo(201,694)
-        pyautogui.dragTo(201,286,duration = 1)
+        pyautogui.dragTo(201,60,duration = 1)
 
         time.sleep(2)
 
@@ -354,7 +375,7 @@ def monitor_marchqueue(click_delay):
             pyautogui.moveTo(10,10)
             SpecialClick(["9","L","home"], [1,1,1])
             logging.info(f"Clicked on fountain ({x}, {y})")
-        if match_and_handle(screen_gray, templates["fountain"], 0.8, on_fountain):
+        if match_and_handle(screen_gray, templates["fountain"], 0.85, on_fountain):
             continue
 
         # Perform template matching for heroadvance            
@@ -374,7 +395,7 @@ def monitor_marchqueue(click_delay):
                 logging.info(f"free recruit ({x2}, {y2})")
                 time.sleep(3)
             match_and_handle(screen_gray2, templates["free"], 0.85, on_free)
-        if match_and_handle(screen_gray, templates["heroadvance"], 0.75, on_heroadvance, region=(62, 436, 300, 554)):
+        if match_and_handle(screen_gray, templates["heroadvance"], 0.75, on_heroadvance, region=(62, 296, 300, 532)):
             continue
  
         # Perform template matching for contribution
@@ -437,8 +458,9 @@ def SpecialClick(keypress, delay):
 def main():
     # List of image paths to search for on the screen
     # Replace these with the paths to your actual images
+    base_dir = os.path.join(os.path.dirname(__file__), 'gameplay')
     image_paths = [
-        r"C:\Users\LENOVO\Pictures\Screenshots\help.png",    
+        os.path.join(base_dir, "help.png"),    
     ]
 
     # Call the function with the list of image paths and optional parameters
