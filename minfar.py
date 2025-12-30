@@ -8,13 +8,32 @@ import os
 import logging
 import pygetwindow as gw
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 # Global variables
 killswitch_activated = False
 Rally_activated = False
 Rally_activated2 = False
 Farm_activated = True
+window_index = 0
+
+class WindowTitleFilter(logging.Filter):
+    def filter(self, record):
+        global windows, window_index
+        try:
+            if 'windows' in globals() and windows:
+                if 0 <= window_index < len(windows):
+                    record.window_title = windows[window_index].title
+                else:
+                    record.window_title = "Unknown"
+            else:
+                record.window_title = "No Window"
+        except Exception:
+            record.window_title = "Error"
+        return True
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(window_title)s - %(levelname)s - %(message)s')
+logging.getLogger().addFilter(WindowTitleFilter())
+
 windows = gw.getWindowsWithTitle('wosmin') + gw.getWindowsWithTitle('WOSMIN')
 if windows:
     for win in windows:
@@ -23,7 +42,6 @@ if windows:
             logging.info(f"Window '{win.title}' moved to (0, 0)")
         except Exception as e:
             logging.error(f"Failed to move window '{win.title}': {e}")
-window_index = 0
 
 # Move console window
 console_windows = gw.getWindowsWithTitle('KingShotAutoConsole')
