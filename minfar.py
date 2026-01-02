@@ -167,10 +167,11 @@ def monitor_killswitch(killswitch_key):
     global Rally_activated2
     global Farm_activated
     while True:
-        if keyboard.is_pressed(killswitch_key):
-            logging.info("Killswitch activated.")
+        if keyboard.is_pressed(killswitch_key) or keyboard.is_pressed('Ctrl+C'):
+            logging.info("Killswitch activated (Key or End). Exiting...")
             killswitch_activated = True
-            break
+            # Force exit to ensure immediate termination if threads are stuck sleeping
+            os._exit(0)
         if keyboard.is_pressed('r'):
             logging.info("Rally activated.")
             Rally_activated = not Rally_activated
@@ -301,7 +302,7 @@ def monitor_marchqueue(click_delay):
             match_and_handle(screen_gray, templates["rally"], 0.7, on_rally,region=(108, 543, 280, 638))
 
         # start to do rally 2
-        if Rally_activated2 and windows[window_index].title == "wosmin":
+        if Rally_activated2:
             def on_rally2(x, y):
                 time.sleep(1)
                 pyautogui.moveTo(x, y)
@@ -312,7 +313,7 @@ def monitor_marchqueue(click_delay):
                 pyautogui.dragTo(522,768,duration = 1)
                 SpecialClick(["o","f","9","u","8","e"], [1.5,2.5,1.5,1.5,1.5,1.5])
                 logging.info(f"Clicked on rally2 ({x}, {y})")
-            match_and_handle(screen_gray, templates["rally2"], 0.8, on_rally2,region=(108, 581, 280, 639))
+            match_and_handle(screen_gray, templates["rally2"], 0.7, on_rally2,region=(108, 579, 280, 639))
         #Go to town page
         delay = [0.5,2]
         key =["S","5"]
