@@ -345,7 +345,7 @@ def monitor_marchqueue(click_delay):
             pyautogui.moveTo(10,10)
             time.sleep(3)
             SpecialClick(["9","g","a","9","9","t","esc","s"], [3,1.5,1.5,1.5,1.5,1.5,1.5,3])
-        if match_and_handle(screen_gray, templates["idle"], 0.8, on_idle, region=(67, 459, 351, 646)):
+        if match_and_handle(screen_gray, templates["idle"], 0.8, on_idle, region=(129, 300, 294, 468) if windows[window_index].title == "wosmin" else (67, 459, 351, 646)):
             continue
 
         # check for conquest here
