@@ -1,14 +1,15 @@
 ```mermaid
-flowchart TD
-    A[Supervisee enters drop-off point]
-    B[Supervisee removes clothing and personal belongings<br/>and places them on X-ray tray]
-    C[Supervisee enters search room<br/>X-ray machine moves tray forward for scanning]
-    D[Scanning complete<br/>Result displayed on NEC system]
-    E[No threat detected.<br/>Supervisee retrieves belongings and puts on clothing]
-    F[Supervisee leaves pick-up point<br/>X-ray machine moves tray backward and waits for next supervisee]
+flowchart LR
+    A[Supervisee arrives at the drop-off point]
+    B[Supervisee disrobes and relinquishes personal belongings<br/>placing them onto the X-ray tray]
+    C[Supervisee proceeds into the search chamber<br/>as the X-ray machine advances the tray for scanning]
+    D[Scanning complete<br/>Results are exhibited on the NEC system]
+    E[No threats detected.<br/>Supervisee retrieves their possessions and dons their attire]
+    F[Supervisee departs from the pick-up point<br/>as the X-ray machine retracts the tray and awaits the next supervisee]
 
     A --> B
     B --> C
     C --> D
     D --> E
     E --> F
+```
