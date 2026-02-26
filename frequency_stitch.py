@@ -218,6 +218,10 @@ def stitch_images_frequency(
     """
     is_color = img_left.ndim == 3
 
+    # Skip stitching when both inputs are identical
+    if img_left.shape == img_right.shape and np.array_equal(img_left, img_right):
+        return img_left.copy(), (0.0, 0.0), 0.0
+
     # Convert to grayscale for alignment
     def to_gray(img: np.ndarray) -> np.ndarray:
         if img.ndim == 3:

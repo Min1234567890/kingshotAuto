@@ -115,6 +115,23 @@ class TestPhaseCorrelateMatch:
 # ---------------------------------------------------------------------------
 
 class TestStitchImagesFrequency:
+    def test_identical_images_skips_stitching(self):
+        """Identical images must be returned as-is without stitching."""
+        rng = np.random.default_rng(99)
+        img = rng.integers(0, 255, (64, 128), dtype=np.uint8)
+        panorama, (dy, dx), psr = stitch_images_frequency(img, img)
+        np.testing.assert_array_equal(panorama, img)
+        assert dy == 0.0 and dx == 0.0
+        assert psr == 0.0
+
+    def test_identical_color_images_skips_stitching(self):
+        """Identical color images must be returned as-is without stitching."""
+        rng = np.random.default_rng(100)
+        img = rng.integers(0, 255, (64, 128, 3), dtype=np.uint8)
+        panorama, (dy, dx), psr = stitch_images_frequency(img, img)
+        np.testing.assert_array_equal(panorama, img)
+        assert dy == 0.0 and dx == 0.0
+
     def test_output_wider_than_input(self):
         """Stitched panorama must be wider than a single input image."""
         img_l, img_r = _synthetic_pair(h=64, w=128, overlap=40)
